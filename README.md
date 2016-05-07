@@ -1,9 +1,14 @@
-# Update Drupal Photos (D6 to D8)
+# Migrate Drupal Photos (D6 to D8)
+
+
+## Update
+
+For what it does — working with one image at a time — this code is now working (May 7, 2016). (The code is ugly and doesn't check for SQL errors, but it works.)
 
 
 ## Introduction
 
-This is a little PHP/MySQL project that attempts to upgrade a Drupal 6 "Photo" content type to a Drupal 8 "PhotoD8" content type.
+This is a little PHP/MySQL project that attempts to upgrade/migrate a Drupal 6 "Photo" content type to a Drupal 8 "PhotoD8" content type.
 
 
 ## Discussion
@@ -15,7 +20,7 @@ Under the section "Files and Images," the Drupal.org node titled [Known issues w
 This is a huge problem for me, as I have over 1,700 photos posted on alvinalexander.com alone. So I'm trying to create a solution for this problem.
 
 
-## Possible Solution (not working yet)
+## My approach (solution)
 
 My attempt at a solution goes like this. First, start with a D6 to D8 migration:
 
@@ -35,106 +40,107 @@ The PhotoD8 content type has these fields:
 * Label = "Photo D8", Machine Name = "field_photo_d8", Field Type = "Image"
 
 
-## Can't Get the Solution to Work
-
-I've been trying this, and so far I've been able to get it to this point:
-
-* The node body text shows up at the old D6 URL on the D8 site
-* The image does not show up
-* When I click the "Edit" link on that node, the Edit form shows "Edit PhotoD8 ...", but it does not show the image
-
-At some point I also do something that makes the body text go away, but I don't know what that is. It may happen when I run `drush cr`, or something else.
-
 
 ## A PHP Script to Update the Photos
 
-The [UpdatePhotos.php](UpdatePhotos.php) file in this project contains the source code for a PHP script I've been trying to write to automate the migration of the D6 photos to the D8 PhotoD8 content type, but so far it's not working. 
-
-The basic idea of that script is that I start with a value from `field_photo_target_id` in the `node__field_photo` table, and then run the script using that idea. For instance, the last attempt at the time of this writing started with a `field_photo_target_id` value of `2218`, and the script goes from there.
-
-
-## The Raw SQL Queries
-
-While the UpdatePhotos.php file shows my latest attempt(s), this code gives you an idea of the raw MySQL queries I was running during my initial tests. In these queries, `7681` was the revision_id of the original D6 node:
-
-````
-UPDATE `node` SET type='photod8' WHERE vid=7681;
-
-UPDATE `node__body` SET bundle='photod8' WHERE revision_id=7681;
-
-INSERT INTO node__field_photo_d8 (bundle, deleted, entity_id, revision_id, langcode, delta, field_photo_d8_target_id, field_photo_d8_alt, field_photo_d8_title, field_photo_d8_width, field_photo_d8_height) VALUES ('photod8', 0, 7493, 7681, 'en', 0, 2187, 'alt', 'title', 420, 462);
-
-INSERT INTO node_revision__field_photo_d8
-  (bundle, deleted, entity_id, revision_id, langcode, delta, field_photo_d8_target_id,
-  field_photo_d8_alt, field_photo_d8_title, field_photo_d8_width, field_photo_d8_height)
-  VALUES ('photod8', 0, 7493, 7681, 'en', 0, 2187, 'alt', 'title', 420, 462)
-
-UPDATE node__comment SET bundle = 'photod8' WHERE revision_id = 7681;
-UPDATE node__tags1 SET bundle = 'photod8' WHERE revision_id = 7681;
-UPDATE node_field_data set type = 'photod8' WHERE vid = 7681;
-UPDATE node_revision__body set bundle = 'photod8' WHERE revision_id = 7681;
-UPDATE node_revision__comment set bundle = 'photod8' WHERE revision_id = 7681;
-UPDATE node_revision__tags1 set bundle = 'photod8' WHERE revision_id = 7681;
-````
-
-FWIW, I came up with these queries by running a series of queries against the entire D8 database using PhpMyAdmin.
-
-
-## Help!
-
-If anyone can see why this isn't working, I'd appreciate your help. I don't know if I'm just missing something, or if this isn't possible through database queries alone for some reason.
+The [UpdatePhotos.php](UpdatePhotos.php) file is now working, albeit for only one image at a time. I'll work on having it loop over all images soon, hopefully tomorrow.
 
 
 
-## Latest Effort: MySQL Database Diffs
+## History: MySQL Database Diffs
 
-My latest effort was to: 
+The following text isn't important to anyone but me, but I want to keep it here. This is the approach I used to finally find the last queries that were necessary to get this code working.
 
-* Take a snapshot of the MySQL D8 database
+What I did was:
+
+* Make a backup of the MySQL D8 database
 * Add a new photo using the D8 "PhotoD8" content type
-* Take another snapshot of the D8 database
-* Weed out the junk and take a look at the diffs of the database snapshots
+* Make another backup of the D8 database
+* Do a `diff` on those two backup files, weeding out the junk to find the problem(s)
 
-This shows the result of that effort. I'm currently trying to compare my queries against this:
+The following text shows the result of that effort. (If you can understand my cryptic notes, good luck. ;)
 
 ````
+Database Diffs (The manually-added "Dick Tidrow" PhotoD8 image vs the old/original D6 "Cat" photo)
+--------------------------------------------------------------------------------------------------
+
 < INSERT INTO `file_managed` VALUES (2221,'6e6fc9c2-b83b-4f10-b019-39e0ac7c2586','en',1,'dick-tidrow-cubbies.jpg','public://2016-05/dick-tidrow-cubbies.jpg','image/jpeg',30718,1,1462647881,1462647912);
+    - newest FIDs are 2221, 2222, 2223
+    - Dick Tidrow is 2221, nid=7550
+    - Cat Cartoon is 2218 (manual effort, old image)
+        - changed uid to 1 (NOTNEEDED)
+        - nid=7545, vid=7735
+            - title shows up at node/7545, nothing else shows up
+        - filesize is correct
+    - Chipotle FID is 2219
+        - nid=7548, vid=7738
+    - the uid for chipotle image is 3, not 1
+        - changed to 1 (NOTNEEDED)
+    - no content at all at Chipotle url (node/7548)
+
 < INSERT INTO `file_usage` VALUES (2221,'file','node','7550',1);
+    - Dick Tidrow at 2221/7550 looks good (added thru ui)
+    - Cat at 2218/7545 looks like Dick Tidrow
+
 < INSERT INTO `history` VALUES (1,7550,1462647914);
+    - Cat and Dick Tidrow look the same
+
 < INSERT INTO `key_value` VALUES ('state','system.cron_last','i:1462647842;');
 > INSERT INTO `key_value` VALUES ('state','system.cron_last','i:1462580283;');
+    - hopefully these key/value pairs aren't important
+
 < INSERT INTO `node` VALUES (7550,7740,'photod8','c37a1d9e-a610-4052-b9e0-515764479e13','en');
+    - 7550/7740 and 7545/7735 are both here
+    - uuid field here
+    - all fields look ok
+
 < INSERT INTO `node__body` VALUES ('photod8',0,7550,7740,'en',0,'Dick Tidrow of the Chicago Cubbies.','','anonymous_format');
+    - 7550 Dick Tidrow has no body_summary, body_format=anonymous_format
+    - 7545 Cat has a body_summary, and body_format=full_html
+        - deleted body_summary, changed body_format=anonymous_format  (TODO:MAYBE)
+            - want to see if full_html is a problem, so get rid of it
+
 < INSERT INTO `node__field_photo_d8` VALUES ('photod8',0,7550,7740,'en',0,2221,'Dick Tidrow','',576,250);
+    - Cat looks like Dick Tidrow
+    - confirmed Cat width and height
+
 < INSERT INTO `node_field_data` VALUES (7550,7740,'photod8','en','Dick Tidrow',1,1,1462647847,1462647912,1,0,1,1);
+    - title is repeated here
+        - i use “” and ‘’ in title (was not a problem)
+    - uid was 3, changing it to 1 to match Dick Tidrow (NOTNEEDED)
+    - all else is the same
+
 < INSERT INTO `node_field_revision` VALUES (7550,7740,'en','Dick Tidrow',1,1,1462647847,1462647912,1,0,1,1);
+    - title is repeated here
+        - i use “” and ‘’ in title
+    - Cat langcode was 'und', changing to en (TODO:MAYBE)
+    - uid was 3, changing it to 1 to match Dick Tidrow (NOTNEEDED)
+    - all else is the same
+    - --------------------
+    - ***** WORKING *****
+    - --------------------
+        - run `drush cr` and the Cat is now showing up
+
 < INSERT INTO `node_revision` VALUES (7550,7740,'en',1462647881,1,NULL);
+    - Cat langcode is 'und', Dick Tidrow is 'en' (TODO:MAYBE)
+        - change Cat to match
+    - Cat revision_uid=3, Dick Tidrow is 1 (NOTNEEDED)
+        - change Cat to match
+
+
 < INSERT INTO `node_revision__body` VALUES ('photod8',0,7550,7740,'en',0,'Dick Tidrow of the Chicago Cubbies.','','anonymous_format');
+    - Cat body_format is full_html, change it to anonymous_format
+    - Cat has body_summary, delete it (change)
+
+
 < INSERT INTO `node_revision__field_photo_d8` VALUES ('photod8',0,7550,7740,'en',0,2221,'Dick Tidrow','',576,250);
-< INSERT INTO `sessions` VALUES (1,'Lz8XFh_YLwOyWnReQwV5C0UMzy0ZuKVihvAQg-wskHw','127.0.0.1',1462647913,'_sf2_attributes|a:1:{s:3:\"uid\";s:1:\"1\";}_sf2_flashes|a:0:{}_sf2_meta|a:4:{s:1:\"u\";i:1462647843;s:1:\"c\";i:1462482674;s:1:\"l\";s:7:\"2000000\";s:1:\"s\";s:43:\"4BwMl1ZaoN3_htnJn5cKC9C5fe10ZMC11XLH_oKLtBo\";}dblog_overview_filter|a:1:{s:4:\"type\";a:1:{s:17:\"migrate_drupal_ui\";s:17:\"migrate_drupal_ui\";}}');
-> INSERT INTO `sessions` VALUES (1,'Lz8XFh_YLwOyWnReQwV5C0UMzy0ZuKVihvAQg-wskHw','127.0.0.1',1462590516,'_sf2_attributes|a:1:{s:3:\"uid\";s:1:\"1\";}_sf2_flashes|a:0:{}_sf2_meta|a:4:{s:1:\"u\";i:1462590516;s:1:\"c\";i:1462482674;s:1:\"l\";s:7:\"2000000\";s:1:\"s\";s:43:\"4BwMl1ZaoN3_htnJn5cKC9C5fe10ZMC11XLH_oKLtBo\";}dblog_overview_filter|a:1:{s:4:\"type\";a:1:{s:17:\"migrate_drupal_ui\";s:17:\"migrate_drupal_ui\";}}');
-< INSERT INTO `url_alias` VALUES (18107,'/node/7550','/photos/dick-tidrow-cubbies','en');
-< INSERT INTO `users_field_data` VALUES (1,'en','',NULL,'ddadmin911','$S$EicglgEJRpruyvcw6RQ.vTq4zN3SuZ/XOKLWxGOu55VCdIoboM8g','devdaily@gmail.com','Europe/London',1,1247936247,1462482938,1462647842,1462482027,'devdaily@gmail.com',1);
-> INSERT INTO `users_field_data` VALUES (1,'en','',NULL,'ddadmin911','$S$EicglgEJRpruyvcw6RQ.vTq4zN3SuZ/XOKLWxGOu55VCdIoboM8g','devdaily@gmail.com','Europe/London',1,1247936247,1462482938,1462590516,1462482027,'devdaily@gmail.com',1);
-< INSERT INTO `watchdog` VALUES (234,0,'filter','Disabled text format: %format.','a:1:{s:7:\"%format\";s:10:\"full_html1\";}',1,'','http://aad8:8888/node/add','http://aad8:8888/admin/content?status=All&type=photod8&title=&langcode=All','127.0.0.1',1462647844);
-< INSERT INTO `watchdog` VALUES (235,0,'cron','Attempting to re-run cron while it is already running.','a:0:{}',4,'','http://aad8:8888/node/add/photod8','http://aad8:8888/node/add','127.0.0.1',1462647848);
-< INSERT INTO `watchdog` VALUES (236,0,'filter','Disabled text format: %format.','a:1:{s:7:\"%format\";s:10:\"full_html1\";}',1,'','http://aad8:8888/node/add','http://aad8:8888/admin/content?status=All&type=photod8&title=&langcode=All','127.0.0.1',1462647849);
-< INSERT INTO `watchdog` VALUES (237,0,'filter','Disabled text format: %format.','a:1:{s:7:\"%format\";s:10:\"full_html1\";}',1,'','http://aad8:8888/node/add','http://aad8:8888/admin/content?status=All&type=photod8&title=&langcode=All','127.0.0.1',1462647853);
-< INSERT INTO `watchdog` VALUES (238,0,'filter','Disabled text format: %format.','a:1:{s:7:\"%format\";s:10:\"full_html1\";}',1,'','http://aad8:8888/node/add','http://aad8:8888/admin/content?status=All&type=photod8&title=&langcode=All','127.0.0.1',1462647854);
-< INSERT INTO `watchdog` VALUES (239,0,'filter','Disabled text format: %format.','a:1:{s:7:\"%format\";s:10:\"full_html1\";}',1,'','http://aad8:8888/node/add','http://aad8:8888/admin/content?status=All&type=photod8&title=&langcode=All','127.0.0.1',1462647854);
-< INSERT INTO `watchdog` VALUES (240,0,'filter','Disabled text format: %format.','a:1:{s:7:\"%format\";s:10:\"full_html1\";}',1,'','http://aad8:8888/node/add','http://aad8:8888/admin/content?status=All&type=photod8&title=&langcode=All','127.0.0.1',1462647855);
-< INSERT INTO `watchdog` VALUES (241,0,'filter','Disabled text format: %format.','a:1:{s:7:\"%format\";s:10:\"full_html1\";}',1,'','http://aad8:8888/node/add','http://aad8:8888/admin/content?status=All&type=photod8&title=&langcode=All','127.0.0.1',1462647855);
-< INSERT INTO `watchdog` VALUES (242,0,'filter','Disabled text format: %format.','a:1:{s:7:\"%format\";s:10:\"full_html1\";}',1,'','http://aad8:8888/node/add','http://aad8:8888/admin/content?status=All&type=photod8&title=&langcode=All','127.0.0.1',1462647858);
-< INSERT INTO `watchdog` VALUES (243,0,'filter','Disabled text format: %format.','a:1:{s:7:\"%format\";s:10:\"full_html1\";}',1,'','http://aad8:8888/node/add','http://aad8:8888/admin/content?status=All&type=photod8&title=&langcode=All','127.0.0.1',1462647858);
-< INSERT INTO `watchdog` VALUES (244,0,'cron','Cron run completed.','a:0:{}',5,'','http://aad8:8888/node/add','http://aad8:8888/admin/content?status=All&type=photod8&title=&langcode=All','127.0.0.1',1462647871);
-< INSERT INTO `watchdog` VALUES (245,1,'content','@type: added %title.','a:2:{s:5:\"@type\";s:7:\"photod8\";s:6:\"%title\";s:11:\"Dick Tidrow\";}',5,'<a href=\"/photos/dick-tidrow-cubbies\" hreflang=\"en\">View</a>','http://aad8:8888/node/add/photod8','http://aad8:8888/node/add/photod8','127.0.0.1',1462647913);
+    - all is well here
 ````
 
 
+## About me
 
-
-
-
+My name is Alvin Alexander, and you can find me at [alvinalexander.com](http://alvinalexander.com).
 
 
 

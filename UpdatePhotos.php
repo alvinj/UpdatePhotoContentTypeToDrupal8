@@ -6,10 +6,16 @@
   $password = "d8_pass";
   $dbname = "aa_d8";
 
-  # get this from field_photo_target_id in node__field_photo, latest first
-  $photo_id = 2218;
+  # start the process by looking in `node__field_photo` to get a `field_photo_target_id`
+  # value. in my case, start with the latest first (newest entity_id first). use that 
+  # `field_photo_target_id` as $photo_id here. Ex: 'node/7545' is 'photo_id=2218', and
+  # 'node/7533' is 'photo_id=2210' (ClojureScript image):
+  $photo_id = 2210;
   
-  # 2218 has nid=7545. body text and image do not show up at that url.
+  
+  # TODO: You need to run `drush cr` after running this script.
+  #       I just confirmed that this works with different images.
+  
 
   #-----------------------------------------------
   # custom data above, don't change anything below
@@ -72,6 +78,10 @@
   $sql = "UPDATE node_revision__comment set bundle = 'photod8' WHERE revision_id = $rev_id";
   $conn->query($sql);
   $sql = "UPDATE node_revision__tags1 set bundle = 'photod8' WHERE revision_id = $rev_id";
+  $conn->query($sql);
+  $sql = "UPDATE node_field_revision SET langcode='en' WHERE nid=$node_id";
+  $conn->query($sql);
+  $sql = "UPDATE node_revision SET langcode='en' WHERE nid=$node_id";
   $conn->query($sql);
 
   # INSERT statements
