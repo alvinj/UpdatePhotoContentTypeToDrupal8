@@ -137,6 +137,31 @@ Database Diffs (The manually-added "Dick Tidrow" PhotoD8 image vs the old/origin
     - all is well here
 ````
 
+And from my followup notes:
+
+````
+WHAT PROBLEMS/QUERIES I UNCOVERED
+---------------------------------
+    - node__body
+        - changed body_format=anonymous_format
+            - changed back to full_html, ran drush, image still shows
+        - deleted body_summary
+            - put a summary back in here, it still works
+    - node_field_revision (PROBLEM)
+        - Cat langcode was 'und', changing to en
+            - CONFIRMED: this was the problem
+        - ***** WORKING *****
+    - node_revision
+        - Cat langcode is 'und', Dick Tidrow is 'en'
+````
+
+FWIW, the Dick Tidrow images are here:
+
+````
+sites/default/files/2016-05/dick-tidrow-cubbies.jpg
+sites/default/files/styles/thumbnail/public/2016-05/dick-tidrow-cubbies.jpg
+````
+
 
 ## About me
 
