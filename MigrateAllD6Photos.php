@@ -6,8 +6,13 @@
   $password = "d8_pass";
   $dbname = "aa_d8";
 
-  include 'Photo.php';
-  include 'UpgradeQueries.php.php';
+  #include 'Photo.php';
+  #include 'UpgradeQueries.php';
+  
+  require_once('Photo.php');
+  require_once('UpgradeQueries.php');
+
+  echo "connecting ...\n";
 
   # connect to the database
   $conn = new mysqli($servername, $username, $password, $dbname);
@@ -15,13 +20,18 @@
       die("Connection failed: " . $conn->connect_error);
   }
 
+  echo "run query ...\n";
   # get a list of photos from `node__field_photo`
+  # test queries
+  #$sql = "SELECT * FROM node__field_photo WHERE bundle='photo' and deleted=0 ORDER BY entity_id asc LIMIT 100 OFFSET 6";
+  #$sql = "SELECT * FROM node__field_photo WHERE entity_id = 3553";
   $sql = "SELECT * FROM node__field_photo WHERE bundle='photo' and deleted=0 ORDER BY entity_id asc";
   $result = $conn->query($sql);
 
   # an array to store the results
   $photos = array();
 
+  echo "before while ...\n";
   # note - i 'assume success' here
   while($row = $result->fetch_assoc()) {
       $p = new Photo($row["deleted"], $row["entity_id"], $row["revision_id"], $row["langcode"], 
@@ -34,10 +44,13 @@
       #$p->print_details();
   }
 
+  echo "ARRAY LENGTH: " . count($photos) . "\n";
+
   # loop over all D6 photos to create new PhotoD8 content types
   foreach($photos as $photo)
   {
-    #$photo->print_details();
+    #$photo->print_all_details();
+    $photo->print_details();
     run_all_queries($conn, $photo);
   }
   

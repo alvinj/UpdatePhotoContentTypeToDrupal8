@@ -33,7 +33,28 @@
       printf("nid: %s, vid: %s, lang: %s, fip: %s\n", $this->nid, $this->vid, $this->langcode, $this->fid);
     }
 
+    function print_all_details()
+    {
+      printf("deleted: %s, nid: %s, vid: %s, lang: %s, delta: %s, fip: %s, alt: %s, title: %s, w: %s, h: %s\n", 
+        $this->deleted,
+        $this->nid,
+        $this->vid,
+        $this->langcode,
+        $this->delta,
+        $this->fid,
+        $this->photoAlt,
+        $this->photoTitle,
+        $this->photoWidth,
+        $this->photoHeight
+      );
+    }
+
   }
 
 ?>
+
+
+
+
+
 
