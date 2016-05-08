@@ -7,6 +7,7 @@
   $dbname = "aa_d8";
 
   include 'Photo.php';
+  include 'UpgradeQueries.php.php';
 
   # connect to the database
   $conn = new mysqli($servername, $username, $password, $dbname);
@@ -33,10 +34,11 @@
       #$p->print_details();
   }
 
-  # `$photos` is now the array of photo objects i need to loop over
+  # loop over all D6 photos to create new PhotoD8 content types
   foreach($photos as $photo)
   {
-    $photo->print_details();
+    #$photo->print_details();
+    run_all_queries($conn, $photo);
   }
   
   $conn->close();
