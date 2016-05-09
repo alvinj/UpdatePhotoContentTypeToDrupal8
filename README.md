@@ -155,16 +155,17 @@ As of May 8, 2016, my [MigrateAllD6Photos.php](MigrateAllD6Photos.php) file is n
 * Read your D6 photo information, which the migration process copied into your D8 database.
 * Copies and transforms that data into the new PhotoD8 tables we just created.
 
-After you run that script, run this command to flush all caches:
+Just (a) update that script with your D8 database information, then (b) run that script. If everything goes well, you’ll see one line of output for every Photo that is being migrated from D6 to D8. In my case that is a little over 1,700 photos.
+
+After you run that script, be sure to run this command to flush all caches:
 
     drush cr
 
-After this, your old Photo URLs should work, and should have the "Photo D8" content type.
+(Or do whatever else it is you do to clear the caches.)
 
+After you clear the caches, your old D6 Photo URLs should now work. If you click “Edit” on any of those pages, you should see that they have the new "PhotoD8" content type.
 
-## What you should see
-
-After you run my script and flush your caches, you should see your old images show up at their old URLs/URIs. For instance, I previously had a “preview” image that showed up at the URI “node/7493”, and now the full-size original image shows up at that URI.
+As an example of this, I previously had a “preview” image that showed up at the URI “node/7493”, and now when I go to that URI on my D8 website I see the full-size original image there.
 
 If you don’t see your images showing up at your old URLs, I am sorry, your configuration must be different than mine.
 
