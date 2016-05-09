@@ -3,48 +3,109 @@
 
 ## Update
 
-For what it does — working with one image at a time — this code is now working (May 7, 2016). (The code is ugly and doesn't check for SQL errors, but it works.)
+The main script in this project — _MigrateAllD6Photos.php_ — now seems to be working. The code is ugly and doesn't check for SQL errors, but for my purposes it seems to be working okay.
 
 
-## Introduction
+## The problem this project solves
 
-This is a little PHP/MySQL project that attempts to upgrade/migrate a Drupal 6 "Photo" content type to a Drupal 8 "PhotoD8" content type.
-
-
-## Discussion
-
-Under the section "Files and Images," the Drupal.org node titled [Known issues when upgrading from Drupal 6 or 7 to Drupal 8](https://www.drupal.org/node/2167633) states:
+This project contains a PHP/MySQL project that attempts to upgrade/migrate a Drupal 6 "Photo" content type to a Drupal 8 "PhotoD8" content type. This is necessary because as it is stated under the section "Files and Images" on the drupal.org node titled, [Known issues when upgrading from Drupal 6 or 7 to Drupal 8](https://www.drupal.org/node/2167633):
 
 >"Images attached to Drupal 6 Image nodes, and files attached with File fields do not get migrated."
 
-This is a huge problem for me, as I have over 1,700 photos posted on alvinalexander.com alone. So I'm trying to create a solution for this problem.
+This is a HUGE problem for me, as I have over 1,700 photos posted on alvinalexander.com alone. So I’ve been working to create a solution for this problem.
 
 
 ## My approach (solution)
 
+### First, the migration
+
 My attempt at a solution goes like this. First, start with a D6 to D8 migration:
 
-* On my D6 website I created a simple _Photo_ content type (per the "Using Drupal" book, if I remember right). It has one field, with a Label of "Photo", Name of "field_photo", and Type of "File".
-* Perform a Standard Drupal 6 (D6) to Drupal 8 (D8) migration, keeping the original Photo content type and data intact.
-* Confirm that `node__field_photo` and `node_revision__field_photo` are in the D8 database, and the data is populated.
-* Confirm that the image files are on disk. The file locations may be different, but they reflect what is shown in the D8 database.
+* A long time ago on my D6 website I created a simple _Photo_ content type (per the "Using Drupal" book, if I remember right). It has one field, with a Label="Photo", Name="field_photo", and Type="File".
+* Perform a "Standard" Drupal 6 (D6) to Drupal 8 (D8) migration.
+* Confirm that `node__field_photo` and `node_revision__field_photo` database tables are in the D8 database, and the data is populated. (They are there with Drupal 8.1.0.)
+* Confirm that the original image files are on disk. The file locations may be different, but they reflect what is shown in the D8 database. My files are now under this directory:
 
-Now work on the solution:
+````
+sites/default/files/photos/...
+````
 
-* Create a new "PhotoD8" content type in the D8 installation.
-* Migrate the data from the old "Photo" database tables to the new "PhotoD8" tables using SQL queries.
+>Note that the old "imagecache" files are gone, and when I say "gone," I mean "long gone." My solution only works with the large, original files. I display those files with the PhotoD8 content type I'm about to create.
 
-The PhotoD8 content type has these fields:
+### Fix the `full_html` format
+
+You also need to run this query:
+
+    UPDATE `node__body` SET `body_format`='full_html' WHERE `body_format`='full_html1';
+
+and then clear the caches:
+
+    drush cr
+
+
+### Make a backup
+
+Once you finish the initial D6->D8 migration, this is a good time to back up your D8 database and website files. For my website it takes close to 30 minutes to run the migration, so when you need to do that again and again, you'll find that it's easier to have these backups.
+
+
+### Create a new "PhotoD8" content type
+
+Now you need to create a new "PhotoD8" content type. You need this so you can migrated the data from the old "Photo" database tables to the new "PhotoD8" tables using SQL queries.
+
+To do this, go to the 'admin/structure/types/add' URI, and use (exact) these settings:
+
+* Name = "PhotoD8"
+* Description can be whatever you want it to be
+* Leave everything at its default values, click "Save and Manage Fields"
+
+On the "Manage fields" screen that follows, click "Add field". On the "Add field" form that follows, use these settings:
+
+* "Add a new field": Select "Image" (under Reference)
+* Label = "Photo D8"
+* Click "Save and continue"
+
+On the next form:
+
+* "Upload destination" = "Public files"
+* No "Default Image"
+* "Allow number of values" = (Limited, 1)
+* Click "Save field settings"
+
+On the next form:
+
+* Label = "Photo D8"
+* Make the image field Required
+* Enable Alt field.
+* Don't make the Alt field required (un-check it)
+* Go with other defaults
+* Click "Save settings"
+
+You should now be back to "Manage fields." On this screen you should see these two rows in the table:
 
 * Label = "Body", Machine Name = "body", Field Type = "Text (formatted, long, with summary)"
 * Label = "Photo D8", Machine Name = "field_photo_d8", Field Type = "Image"
+
+Now you're ready for the next step.
+
+### Make another database backup
+
+This is another great time to backup the database.
 
 
 
 ## A PHP Script to Update the Photos
 
-The [UpdatePhotos.php](UpdatePhotos.php) file is now working, albeit for only one image at a time. I'll work on having it loop over all images soon, hopefully tomorrow.
+Before running my script, you should verify that the `langcode` field in the `node__field_photo` D8 database table is properly set to 'en' (or whatever your locale is). If it is set to `und`, you _MUST RUN THIS NEXT QUERY_, or you'll just make the problem worse:
 
+    update node__field_photo set langcode='en'
+
+The [MigrateAllD6Photos.php](MigrateAllD6Photos.php) file is now working, and it will convert all the old D6 "Photo" content types to the new D8 "Photo D8" content type.
+
+After you run the script, run this command to flush all caches:
+
+    drush cr
+
+After this, your old Photo URLs should work, and should have the "Photo D8" content type.
 
 
 ## History: MySQL Database Diffs

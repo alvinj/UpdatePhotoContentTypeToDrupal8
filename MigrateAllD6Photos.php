@@ -1,18 +1,22 @@
 #!/Applications/MAMP/bin/php/php5.6.10/bin/php
 
 <?php
+
   $servername = "localhost";
   $username = "d8_user";
   $password = "d8_pass";
   $dbname = "aa_d8";
 
-  #include 'Photo.php';
-  #include 'UpgradeQueries.php';
-  
+  # --------------------------------------------------------
+  # Before Running This Script
+  # --------------------------------------------------------
+  # - make sure 'langcode' in 'node__field_photo' is 'en'
+  #     - or whatever your code is, just not 'und'
+  # --------------------------------------------------------
+
+
   require_once('Photo.php');
   require_once('UpgradeQueries.php');
-
-  echo "connecting ...\n";
 
   # connect to the database
   $conn = new mysqli($servername, $username, $password, $dbname);
@@ -20,7 +24,6 @@
       die("Connection failed: " . $conn->connect_error);
   }
 
-  echo "run query ...\n";
   # get a list of photos from `node__field_photo`
   # test queries
   #$sql = "SELECT * FROM node__field_photo WHERE bundle='photo' and deleted=0 ORDER BY entity_id asc LIMIT 100 OFFSET 6";
@@ -31,7 +34,6 @@
   # an array to store the results
   $photos = array();
 
-  echo "before while ...\n";
   # note - i 'assume success' here
   while($row = $result->fetch_assoc()) {
       $p = new Photo($row["deleted"], $row["entity_id"], $row["revision_id"], $row["langcode"], 

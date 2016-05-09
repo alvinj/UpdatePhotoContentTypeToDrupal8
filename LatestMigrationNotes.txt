@@ -1,0 +1,49 @@
+
+UPDATE node SET type='photod8', langcode='en' WHERE vid=7735
+    - looks okay
+UPDATE node__body SET bundle='photod8', langcode='en' WHERE revision_id=7735
+    - looks okay
+    - has body_value, body_summary, and body_format
+UPDATE node__comment SET bundle = 'photod8' WHERE revision_id = 7735
+    - empty
+UPDATE node__tags1 SET bundle = 'photod8' WHERE revision_id = 7735
+    - has some tags
+    - but langcode IS 'und' (TODO: FIX THIS) (did not solve problem)
+UPDATE node_revision__tags1 set bundle = 'photod8' WHERE revision_id = 7735
+    - has some tags
+    - but langcode IS 'und' (TODO: FIX THIS) (did not solve problem)
+UPDATE node_field_data set type = 'photod8', langcode='en' WHERE vid = 7735
+    - looks okay
+    - might want to set langcode for all entries in this table (TODO)
+UPDATE node_revision__body set bundle = 'photod8', langcode='en' WHERE revision_id = 7735
+UPDATE node_revision__body set body_format = 'full_html' WHERE revision_id = 7735
+    - looks okay
+    - might want to set langcode for all entries in this table (TODO)
+    - many entries have body_format=full_html1 (TODO: full_html)
+UPDATE node_revision__comment set bundle = 'photod8' WHERE revision_id = 7735
+    - no entry for 7545 here
+    - might want to set langcode for all entries in this table (TODO)
+UPDATE node_field_revision SET langcode='en' WHERE nid=$photo->nid
+    - looks okay
+    - might want to set langcode for all entries in this table (TODO)
+UPDATE node_revision SET langcode='en' WHERE nid=$photo->nid
+    - looks okay
+    - might want to set langcode for all entries in this table (TODO)
+INSERT INTO node__field_photo_d8
+    - looks okay
+INSERT INTO node_revision__field_photo_d8
+    - looks okay
+
+* Content > List Content > Filter (Photo D8) shows no content (ERROR, WRONG)
+  * node__field_photo_d8 looks okay
+  * node_revision__field_photo_d8 looks okay
+
+* Going to need to add another image manually (through the UI), then look for diffs again
+  * added Dick Tidrow, node/7549
+    * worked fine
+  * it's the only content that shows up under List Content (Photo D8)
+
+
+
+
+
