@@ -58,6 +58,9 @@
   
   $conn->close();
   
+  echo "";
+  echo "Please flush all caches (drush cr)";
+  
 ?>
 
 

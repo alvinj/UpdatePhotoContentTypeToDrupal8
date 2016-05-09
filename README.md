@@ -1,40 +1,85 @@
-# Migrate Drupal Photos (D6 to D8)
+# Migrate Drupal Photo content type (from Drupal 6 to 8)
 
 
-## Update
+## Update (May 8, 2016)
 
-The main script in this project — _MigrateAllD6Photos.php_ — now seems to be working. The code is ugly and doesn't check for SQL errors, but for my purposes it seems to be working okay.
+The main script in this project — _MigrateAllD6Photos.php_ — now seems to be working. The code is ugly and doesn't check for SQL errors, but for my purposes it seems to be working okay. To get that script to work and migrate your Drupal 6 photo content type to a Drupal 8 photo content type, you also need to run a couple of queries shown here.
 
 
 ## The problem this project solves
 
-This project contains a PHP/MySQL project that attempts to upgrade/migrate a Drupal 6 "Photo" content type to a Drupal 8 "PhotoD8" content type. This is necessary because as it is stated under the section "Files and Images" on the drupal.org node titled, [Known issues when upgrading from Drupal 6 or 7 to Drupal 8](https://www.drupal.org/node/2167633):
+A long time ago on my Drupal 6 (D6) websites I created a simple _Photo_ content type (per the "Using Drupal" book, if I remember right). Using that content type, I added over 1,700 images to just one of my websites, so it’s really important that I migrate those images to my new Drupal 8 (D8) website.
+
+Unfortunately the Drupal 8.1.0 migration process doesn’t handle these images. They just don’t work after the migration process. You can read more about this at [this drupal.org link](https://www.drupal.org/node/2167633), which states:
 
 >"Images attached to Drupal 6 Image nodes, and files attached with File fields do not get migrated."
 
-This is a HUGE problem for me, as I have over 1,700 photos posted on alvinalexander.com alone. So I’ve been working to create a solution for this problem.
+This is a *HUGE* show-stopper of a problem for me, so I’ve been working to create a solution for this. I just got a solution working that works for me, so I thought I’d share that here for anyone else who’s feeling this pain. (It has taken me three days to figure this out.)
 
 
-## My approach (solution)
+## One important caveat
+
+An important caveat of my solution is that if you created your Drupal 6 (D6) photo content type using ImageCache and ImageField modules, and created smaller “preview” images when you uploaded your original images, those smaller “preview” images are long gone. That has nothing to do with me. They're just not migrated over by Drupal 8.1.0. The only image files that are migrated over are the large, original images you uploaded.
+
+I can live with that limitation, as I’m about to work on another small project to make sure that all of these images are either less than 730 pixels wide (to match my new website’s format). If the images are larger than that, I’ll re-size them and then update the database tables with the new height/width information.
+
+If you can live with that limitation — that I make no attempt to use the old “preview” images — this project may work for you.
+
+
+## Very important assumptions this script makes
+
+My script makes at least the following assumptions. If these don’t match your configuration, you’ll have to adapt the script to make it work for your website.
+
+1) I assume that on your D6 website you have a Content Type with the exact name “Photo”. I assume that you can edit that content type at the 'admin/content/node-type/photo' URI on your D6 website.
+
+2) If you click “Manage fields” at that URI, the form that is shown will show one active row in the table with these values: Label="Photo", Name="field_photo", and Type="File". This is what these settings look like on my D6 website:
+
+![Photo field settings](images/d6-photo-content-type-manage-fields.jpg)
+
+Those are really important. If you don’t have those exact settings, my script won’t work. (But you’re welcome to modify my script to match your settings.)
+
+This next assumption may not matter, but when I go to the 'admin/content/node-type/photo/display' URI on my D6 website, I see the following settings:
+
+![Photo display settings](images/d6-photo-display-settings.jpg)
+
+I don’t think that matters, as we’ll be creating a new “photo content type” on the D8 site, but I thought I would mention it.
+
+The only other assumptions I make are:
+
+* You’re willing to create a new photo content type on your D8 website
+* You’re willing to live with the caveat/limitation described above
+* You’re comfortable running a few SQL queries, and running my PHP script
+* You’re working on a dev or test version of your website (not on the production site itself)
+
+(If you try to do any of this on a production website, you are officially crazier than I am.)
+
+
+## A note about the “Full HTML” format
+
+I used the “Full HTML” format everywhere on my D6 website, and it’s important to me that this was migrated over to my D8 website. At the moment it’s not properly migrated by Drupal 8.1.0, but I show how to fix this problem in my [Migrating a Drupal 6 website to Drupal 8](/drupal/how-to-upgrade-drupal-6-website-to-drupal-8) article, which I also link to below.
+
+If you are not using the “Full HTML” format, you can skip the queries below where I use it. I kept those queries out of my “photo migration” script so as not to intermingle the two issues.
+
+
+## My solution
 
 ### First, the migration
 
-My attempt at a solution goes like this. First, start with a D6 to D8 migration:
+My solution goes like this. First, start with a D6 to D8 migration:
 
-* A long time ago on my D6 website I created a simple _Photo_ content type (per the "Using Drupal" book, if I remember right). It has one field, with a Label="Photo", Name="field_photo", and Type="File".
-* Perform a "Standard" Drupal 6 (D6) to Drupal 8 (D8) migration.
-* Confirm that `node__field_photo` and `node_revision__field_photo` database tables are in the D8 database, and the data is populated. (They are there with Drupal 8.1.0.)
-* Confirm that the original image files are on disk. The file locations may be different, but they reflect what is shown in the D8 database. My files are now under this directory:
+* Perform a "Standard" Drupal 6 (D6) to Drupal 8 (D8) migration. I write about that process at [Migrating a Drupal 6 website to Drupal 8](/drupal/how-to-upgrade-drupal-6-website-to-drupal-8).
+* After the migration, confirm that `node__field_photo` and `node_revision__field_photo` database tables are in the D8 database, and the data is populated. If you don't have those tables in your D8 database after the migration, my script won't help.
+* Confirm that the original image files are on disk. The file locations may be different, but they should match what's in the D8 database. My files are now under this directory:
 
 ````
 sites/default/files/photos/...
 ````
 
->Note that the old "imagecache" files are gone, and when I say "gone," I mean "long gone." My solution only works with the large, original files. I display those files with the PhotoD8 content type I'm about to create.
+>Again, note that the old "ImageCache" preview files are gone, and when I say "gone," I mean "long gone." My solution only works with the large, original files. I display those files with the PhotoD8 content type I'm about to create.
 
 ### Fix the `full_html` format
 
-You also need to run this query:
+I noted this in my [Migrating a Drupal 6 website to Drupal 8](/drupal/how-to-upgrade-drupal-6-website-to-drupal-8) article, but if you used the Drupal 6 "Full HTML" format, you also need to run this query:
 
     UPDATE `node__body` SET `body_format`='full_html' WHERE `body_format`='full_html1';
 
@@ -42,21 +87,25 @@ and then clear the caches:
 
     drush cr
 
+If you already did that, great.
+
 
 ### Make a backup
 
-Once you finish the initial D6->D8 migration, this is a good time to back up your D8 database and website files. For my website it takes close to 30 minutes to run the migration, so when you need to do that again and again, you'll find that it's easier to have these backups.
+Once you finish the initial D6->D8 migration, this is a good time to back up your D8 database and website files. For my website it takes close to 30 minutes to run the migration, so when you need to do that over and over again, you'll find that it's much faster to have these backups.
 
 
-### Create a new "PhotoD8" content type
+### Create a new “PhotoD8” content type
 
-Now you need to create a new "PhotoD8" content type. You need this so you can migrated the data from the old "Photo" database tables to the new "PhotoD8" tables using SQL queries.
+Now you need to create a new “PhotoD8” content type. You need this so you can migrated the data from the old "Photo" database tables to the new "PhotoD8" tables using SQL queries.
 
-To do this, go to the 'admin/structure/types/add' URI, and use (exact) these settings:
+To do this, go to the 'admin/structure/types/add' URI on your D8 site, and use (exact) these settings:
 
 * Name = "PhotoD8"
 * Description can be whatever you want it to be
 * Leave everything at its default values, click "Save and Manage Fields"
+
+>You need to use the “PhotoD8” name exactly as shown. This affects things in the database, and if you don’t use that name, my script won’t work.
 
 On the "Manage fields" screen that follows, click "Add field". On the "Add field" form that follows, use these settings:
 
@@ -85,27 +134,51 @@ You should now be back to "Manage fields." On this screen you should see these t
 * Label = "Body", Machine Name = "body", Field Type = "Text (formatted, long, with summary)"
 * Label = "Photo D8", Machine Name = "field_photo_d8", Field Type = "Image"
 
-Now you're ready for the next step.
+Now you’re ready for the next step.
 
 ### Make another database backup
 
-This is another great time to backup the database.
+Note: This is another great time to backup the database. You’ll thank me later.
 
 
 
-## A PHP Script to Update the Photos
+## My PHP Script to migrate the photos
 
 Before running my script, you should verify that the `langcode` field in the `node__field_photo` D8 database table is properly set to 'en' (or whatever your locale is). If it is set to `und`, you _MUST RUN THIS NEXT QUERY_, or you'll just make the problem worse:
 
     update node__field_photo set langcode='en'
 
-The [MigrateAllD6Photos.php](MigrateAllD6Photos.php) file is now working, and it will convert all the old D6 "Photo" content types to the new D8 "Photo D8" content type.
+I thought about adding that query to my script, but if you’re using a different language, this won’t make your day any better.
 
-After you run the script, run this command to flush all caches:
+As of May 8, 2016, my [MigrateAllD6Photos.php](MigrateAllD6Photos.php) file is now working. I just tested it against a fresh D8 installation. What it does is:
+
+* Read your D6 photo information, which the migration process copied into your D8 database.
+* Copies and transforms that data into the new PhotoD8 tables we just created.
+
+After you run that script, run this command to flush all caches:
 
     drush cr
 
 After this, your old Photo URLs should work, and should have the "Photo D8" content type.
+
+
+## What you should see
+
+After you run my script and flush your caches, you should see your old images show up at their old URLs/URIs. For instance, I previously had a “preview” image that showed up at the URI “node/7493”, and now the full-size original image shows up at that URI.
+
+If you don’t see your images showing up at your old URLs, I am sorry, your configuration must be different than mine.
+
+
+## About me
+
+My name is Alvin Alexander, and you can find me at [alvinalexander.com](http://alvinalexander).
+
+
+## That’s it, that’s all
+
+This README file goes on for a little while longer, but it’s all just personal notes for me so I can remember how to solve/debug this problem. You’re welcome to read them, but they are very cryptic, so good luck with that. :)
+
+
 
 
 ## History: MySQL Database Diffs
@@ -223,10 +296,6 @@ sites/default/files/2016-05/dick-tidrow-cubbies.jpg
 sites/default/files/styles/thumbnail/public/2016-05/dick-tidrow-cubbies.jpg
 ````
 
-
-## About me
-
-My name is Alvin Alexander, and you can find me at [alvinalexander.com](http://alvinalexander.com).
 
 
 
