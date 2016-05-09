@@ -39,10 +39,14 @@ Tables With a `langcode` Field
 
 Query to find all tables with a `langcode` field:
 
-    SELECT DISTINCT TABLE_NAME 
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE COLUMN_NAME IN ('langcode')
-    AND TABLE_SCHEMA='aa_d8';
+SELECT DISTINCT TABLE_NAME 
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE COLUMN_NAME IN ('langcode')
+AND TABLE_SCHEMA='aa_d8';
+
+Make sure you start MySQL like this:
+
+    mysql -sN -u root -p
 
 Results:
 
