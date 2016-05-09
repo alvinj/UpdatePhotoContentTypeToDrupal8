@@ -1,21 +1,85 @@
-TODO: More queries to update/fix
---------------------------------
 
-UPDATE node__tags1 SET bundle = 'photod8' WHERE revision_id = 7735
-    - update langcode as well
-UPDATE node_revision__tags1 set bundle = 'photod8' WHERE revision_id = 7735
-    - update langcode as well
-UPDATE node_field_data set type = 'photod8', langcode='en' WHERE vid = 7735
-    - update all langcode entries
-UPDATE node_revision__body set body_format = 'full_html' WHERE revision_id = 7735
-    - update all langcode entries
-    - update all full_html1 entries
-UPDATE node_revision__comment set bundle = 'photod8' WHERE revision_id = 7735
-    - update all langcode entries
-UPDATE node_field_revision SET langcode='en' WHERE nid=$photo->nid
-    - update all langcode entries
-UPDATE node_revision SET langcode='en' WHERE nid=$photo->nid
-    - update all langcode entries
+Fix additional full_html1 references (did this)
+-----------------------------------------------
+
+UPDATE block_content__body SET body_format='full_html' WHERE body_format='full_html1';
+UPDATE block_content_revision__body SET body_format='full_html' WHERE body_format='full_html1';
+UPDATE comment__comment_body SET comment_body_format='full_html' WHERE comment_body_format='full_html1';
+UPDATE node_revision__body SET body_format='full_html' WHERE body_format='full_html1';
+
+
+Fix additional langcode fields (did this)
+-----------------------------------------
+
+UPDATE block_content SET langcode='en';
+UPDATE block_content__body SET langcode='en';
+UPDATE block_content_field_data SET langcode='en';
+UPDATE block_content_field_revision SET langcode='en';
+UPDATE block_content_revision SET langcode='en';
+UPDATE block_content_revision__body SET langcode='en';
+UPDATE file_managed SET langcode='en';
+UPDATE menu_link_content SET langcode='en';
+UPDATE menu_link_content_data SET langcode='en';
+UPDATE node SET langcode='en';
+UPDATE node__ad_groups SET langcode='en';
+UPDATE node__body SET langcode='en';
+UPDATE node__category SET langcode='en';
+UPDATE node__field_bookmark_url SET langcode='en';
+UPDATE node__field_image SET langcode='en';
+UPDATE node__field_photo SET langcode='en';
+UPDATE node__field_photo_d8 SET langcode='en';
+UPDATE node__field_quote_author SET langcode='en';
+UPDATE node__field_quote_url SET langcode='en';
+UPDATE node__field_source_url SET langcode='en';
+UPDATE node__field_tags SET langcode='en';
+UPDATE node__field_text_author SET langcode='en';
+UPDATE node__tags1 SET langcode='en';
+UPDATE node__upload SET langcode='en';
+UPDATE node_access SET langcode='en';
+UPDATE node_field_data SET langcode='en';
+UPDATE node_field_revision SET langcode='en';
+UPDATE node_revision SET langcode='en';
+UPDATE node_revision__ad_groups SET langcode='en';
+UPDATE node_revision__body SET langcode='en';
+UPDATE node_revision__category SET langcode='en';
+UPDATE node_revision__field_bookmark_url SET langcode='en';
+UPDATE node_revision__field_image SET langcode='en';
+UPDATE node_revision__field_photo SET langcode='en';
+UPDATE node_revision__field_photo_d8 SET langcode='en';
+UPDATE node_revision__field_quote_author SET langcode='en';
+UPDATE node_revision__field_quote_url SET langcode='en';
+UPDATE node_revision__field_source_url SET langcode='en';
+UPDATE node_revision__field_tags SET langcode='en';
+UPDATE node_revision__field_text_author SET langcode='en';
+UPDATE node_revision__tags1 SET langcode='en';
+UPDATE node_revision__upload SET langcode='en';
+UPDATE search_dataset SET langcode='en';
+UPDATE search_index SET langcode='en';
+UPDATE shortcut SET langcode='en';
+UPDATE shortcut_field_data SET langcode='en';
+UPDATE taxonomy_term_data SET langcode='en';
+UPDATE taxonomy_term_field_data SET langcode='en';
+UPDATE url_alias SET langcode='en';
+UPDATE user__roles SET langcode='en';
+UPDATE user__user_picture SET langcode='en';
+UPDATE users SET langcode='en';
+UPDATE users_field_data SET langcode='en';
+
+# don't update Comment tables
+comment
+comment__comment_body
+comment_field_data
+node__comment
+node__comment_no_subject
+node_revision__comment
+node_revision__comment_no_subject
+
+
+
+
+*** Everything below here is old research. ***
+
+
 
 
 Tables Referencing full_html1
@@ -111,6 +175,87 @@ Results:
     users
     users_field_data
 
+
+Trying to find a way to fix all full_html1 references
+-----------------------------------------------------
+
+UPDATE block_content__body SET body_format='full_html' WHERE body_format='full_html1';
+UPDATE block_content_revision__body SET body_format='full_html' WHERE body_format='full_html1';
+UPDATE comment__comment_body SET comment_body_format='full_html' WHERE comment_body_format='full_html1';
+UPDATE node_revision__body SET body_format='full_html' WHERE body_format='full_html1';
+
+    cache_config
+    cache_default
+    cache_entity
+    config
+    key_value
+
+
+
+
+Trying to find a way to find/verify langcode fields
+---------------------------------------------------
+
+block_content
+block_content__body
+block_content_field_data
+block_content_field_revision
+block_content_revision
+block_content_revision__body
+comment
+comment__comment_body
+comment_field_data
+file_managed
+menu_link_content
+menu_link_content_data
+node
+node__ad_groups
+node__body
+node__category
+node__comment
+node__comment_no_subject
+node__field_bookmark_url
+node__field_image
+node__field_photo
+node__field_photo_d8
+node__field_quote_author
+node__field_quote_url
+node__field_source_url
+node__field_tags
+node__field_text_author
+node__tags1
+node__upload
+node_access
+node_field_data
+node_field_revision
+node_revision
+node_revision__ad_groups
+node_revision__body
+node_revision__category
+node_revision__comment
+node_revision__comment_no_subject
+node_revision__field_bookmark_url
+node_revision__field_image
+node_revision__field_photo
+node_revision__field_photo_d8
+node_revision__field_quote_author
+node_revision__field_quote_url
+node_revision__field_source_url
+node_revision__field_tags
+node_revision__field_text_author
+node_revision__tags1
+node_revision__upload
+search_dataset
+search_index
+shortcut
+shortcut_field_data
+taxonomy_term_data
+taxonomy_term_field_data
+url_alias
+user__roles
+user__user_picture
+users
+users_field_data
 
 
 
