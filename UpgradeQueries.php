@@ -14,12 +14,12 @@
     run_query($conn, "UPDATE node SET type='photod8', langcode='$photo->langcode' WHERE vid=$photo->vid");
     run_query($conn, "UPDATE node__body SET bundle='photod8', langcode='$photo->langcode' WHERE revision_id=$photo->vid");
     run_query($conn, "UPDATE node__comment SET bundle = 'photod8' WHERE revision_id = $photo->vid");
-    run_query($conn, "UPDATE node__tags1 SET bundle = 'photod8' WHERE revision_id = $photo->vid");
+    run_query($conn, "UPDATE node__tags SET bundle = 'photod8' WHERE revision_id = $photo->vid");
     run_query($conn, "UPDATE node_field_data set type = 'photod8', langcode='$photo->langcode' WHERE vid = $photo->vid");
     run_query($conn, "UPDATE node_revision__body set bundle = 'photod8', langcode='$photo->langcode' WHERE revision_id = $photo->vid");
     run_query($conn, "UPDATE node_revision__body set body_format = 'full_html' WHERE revision_id = $photo->vid");
     run_query($conn, "UPDATE node_revision__comment set bundle = 'photod8' WHERE revision_id = $photo->vid");
-    run_query($conn, "UPDATE node_revision__tags1 set bundle = 'photod8' WHERE revision_id = $photo->vid");
+    run_query($conn, "UPDATE node_revision__tags set bundle = 'photod8' WHERE revision_id = $photo->vid");
     run_query($conn, "UPDATE node_field_revision SET langcode='$photo->langcode' WHERE nid=$photo->nid");
     run_query($conn, "UPDATE node_revision SET langcode='$photo->langcode' WHERE nid=$photo->nid");
 
